@@ -1,8 +1,12 @@
 package com.example.allu.imageviewer.fragments;
 
+import android.content.ContentValues;
 import android.content.Context;
+import android.content.Intent;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.DefaultItemAnimator;
@@ -29,6 +33,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.OutputStream;
 import java.util.ArrayList;
 
 public class ListFragment extends Fragment {
@@ -132,6 +137,36 @@ public class ListFragment extends Fragment {
         recyclerViewAdapter.removeSelection();
     }
 
+    public void shareImages(){
+        Log.e(TAG,recyclerViewAdapter.getSelectedImages().size()+"");
+        ArrayList<Uri> uris = new ArrayList<>();
+
+        ContentValues values = new ContentValues();
+        values.put(MediaStore.Images.Media.TITLE, "title");
+        values.put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg");
+
+        for(int i = 0; i < recyclerViewAdapter.getSelectedImages().size(); i++) {
+            Uri uri = context.getContentResolver().
+                    insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                            values);
+
+            OutputStream outstream;
+            try {
+                outstream = context.getContentResolver().openOutputStream(uri);
+                recyclerViewAdapter.getSelectedImages().get(i).getBitmapImage().compress(Bitmap.CompressFormat.JPEG, 100, outstream);
+                outstream.close();
+            } catch (Exception e) {
+                System.err.println(e.toString());
+            }
+
+            uris.add(uri);
+        }
+        Intent shareIntent = new Intent();
+        shareIntent.setAction(Intent.ACTION_SEND_MULTIPLE);
+        shareIntent.putParcelableArrayListExtra(Intent.EXTRA_STREAM, uris);
+        shareIntent.setType("image/*");
+        startActivity(Intent.createChooser(shareIntent, "Share images to.."));
+    }
 
     void fetchDataFromServer(){
         if(!utils.isNetworkAvailable()){

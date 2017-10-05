@@ -32,6 +32,7 @@ import static com.example.allu.imageviewer.activity.DetailedImageView.Intent_Ima
 public class ImagesRecyclerViewAdapter extends RecyclerView.Adapter<ImagesListHolder> {
     static String TAG = ImagesRecyclerViewAdapter.class.getSimpleName();
     ArrayList<ImagesClass> imagesClassArrayList;
+    ArrayList<ImagesClass> selectedImages;
     Context context;
     Utils utils;
     ListFragment.ListItemClickInterface listItemClickInterface;
@@ -44,6 +45,7 @@ public class ImagesRecyclerViewAdapter extends RecyclerView.Adapter<ImagesListHo
         imagesClassArrayList = new ArrayList<>();
         utils = new Utils(context);
         this.listItemClickInterface = listItemClickInterface;
+        selectedImages = new ArrayList<>();
     }
 
     @Override
@@ -57,7 +59,7 @@ public class ImagesRecyclerViewAdapter extends RecyclerView.Adapter<ImagesListHo
         Log.e(TAG,"added "+position);
         final ImagesClass imagesClass = imagesClassArrayList.get(position);
         holder.progressBar.setVisibility(View.VISIBLE);
-        Picasso.with(context).load(imagesClass.getUrl()).placeholder(R.mipmap.ic_launcher_round).error(R.mipmap.ic_launcher_round).into(holder.imageView, new Callback() {
+        Picasso.with(context).load(imagesClass.getUrl()).placeholder(R.mipmap.ic_launcher_round).into(holder.imageView, new Callback() {
             @Override
             public void onSuccess() {
                 holder.progressBar.setVisibility(View.GONE);
@@ -88,12 +90,15 @@ public class ImagesRecyclerViewAdapter extends RecyclerView.Adapter<ImagesListHo
                         holder.imageView.setLayoutParams(lp);
                         holder.checkBoxSelection.setChecked(true);
                         imagesClassArrayList.get(position).setSelection(true);
+                        imagesClass.setBitmapImage(holder.imageView.getDrawingCache());
+                        selectedImages.add(imagesClass);
                     }else {
                         holder.checkBoxSelection.setVisibility(View.VISIBLE);
                         RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT);
                         holder.imageView.setLayoutParams(lp);
                         holder.checkBoxSelection.setChecked(false);
                         imagesClassArrayList.get(position).setSelection(false);
+                        removeSelectedImage(imagesClassArrayList.get(position).getId());
                     }
 
                 }
@@ -111,6 +116,8 @@ public class ImagesRecyclerViewAdapter extends RecyclerView.Adapter<ImagesListHo
                     holder.checkBoxSelection.setChecked(true);
                     imagesClassArrayList.get(position).setSelection(true);
                     listItemClickInterface.onSelection();
+                    imagesClass.setBitmapImage(holder.imageView.getDrawingCache());
+                    selectedImages.add(imagesClass);
                     selection = true;
                 }
                 return true;
@@ -119,6 +126,7 @@ public class ImagesRecyclerViewAdapter extends RecyclerView.Adapter<ImagesListHo
 
         if(!selection){
             holder.checkBoxSelection.setVisibility(View.INVISIBLE);
+            imagesClassArrayList.get(position).setSelection(false);
             RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT);
             holder.imageView.setLayoutParams(lp);
         }
@@ -145,12 +153,19 @@ public class ImagesRecyclerViewAdapter extends RecyclerView.Adapter<ImagesListHo
 
     public void removeSelection(){
         selection = false;
-        for(int i = 0;i<imagesClassArrayList.size();i++){
-            if(imagesClassArrayList.get(i).isSelection()){
-                Log.e(TAG,""+i);
-                imagesClassArrayList.get(i).setSelection(false);
-                this.notifyItemChanged(i);
-                this.notifyDataSetChanged();
+        notifyDataSetChanged();
+        notifyItemRangeChanged(0,imagesClassArrayList.size()-1);
+    }
+
+    public ArrayList<ImagesClass> getSelectedImages(){
+        return this.selectedImages;
+    }
+
+    public void removeSelectedImage(int id){
+        for(int i = 0;i<selectedImages.size();i++){
+            if(selectedImages.get(i).getId() == id){
+                selectedImages.remove(selectedImages.get(i));
+                return;
             }
         }
     }

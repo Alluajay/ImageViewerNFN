@@ -1,5 +1,6 @@
 package com.example.allu.imageviewer.pojo;
 
+import android.graphics.Bitmap;
 import android.os.Parcel;
 import android.os.Parcelable;
 
@@ -10,6 +11,16 @@ import android.os.Parcelable;
 public class ImagesClass implements Parcelable{
     int id;
     String url;
+
+    public Bitmap getBitmapImage() {
+        return bitmapImage;
+    }
+
+    public void setBitmapImage(Bitmap bitmapImage) {
+        this.bitmapImage = bitmapImage;
+    }
+
+    Bitmap bitmapImage;
 
     public boolean isSelection() {
         return selection;

@@ -1,5 +1,7 @@
 <resources>
     <string name="app_name">ImageViewer</string>
+    <string name="photos">Photos</string>
+    <string name="DetailedView">Detailed View</string>
 
     <string name="noImagesFound">No Images Found</string>
 

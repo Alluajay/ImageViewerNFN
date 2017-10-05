@@ -2,6 +2,7 @@ package com.example.allu.imageviewer.activity;
 
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.MenuItem;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 
@@ -23,6 +24,10 @@ public class DetailedImageView extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detailed_image_view);
+        setTitle(getString(R.string.DetailedView));
+
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setDisplayShowHomeEnabled(true);
         utils = new Utils(this);
 
         if(!getIntent().hasExtra(Intent_Image)){
@@ -35,6 +40,18 @@ public class DetailedImageView extends AppCompatActivity {
             detailedFragment.setImageClass(imagesClass);
         }else{
             utils.Toast("Unable to open the image");
+        }
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                // app icon in action bar clicked; go home
+                onBackPressed();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
         }
     }
 }
