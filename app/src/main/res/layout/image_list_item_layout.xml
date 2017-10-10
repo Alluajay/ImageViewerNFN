@@ -9,8 +9,12 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         app:cardElevation="@dimen/default_margin"
+        android:padding="@dimen/default_padding"
         app:cardUseCompatPadding="true">
         <RelativeLayout
+            android:layout_margin="@dimen/default_margin"
+            android:paddingTop="@dimen/default_padding"
+            android:paddingBottom="@dimen/default_padding"
             android:layout_width="match_parent"
             android:layout_height="match_parent">
             <ProgressBar

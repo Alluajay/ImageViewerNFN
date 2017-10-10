@@ -1,10 +1,14 @@
 package com.example.allu.imageviewer.activity;
 
+import android.Manifest;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.drawable.GradientDrawable;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v4.widget.SwipeRefreshLayout;
@@ -49,6 +53,7 @@ public class MainActivity extends AppCompatActivity implements ListFragment.Inte
     static String TAG = MainActivity.class.getSimpleName();
     Utils utils;
     ListFragment listFragment;
+    final int MY_PERMISSIONS_REQUEST_STORAGE = 60;
 
     Menu menu;
 
@@ -93,9 +98,14 @@ public class MainActivity extends AppCompatActivity implements ListFragment.Inte
         img_share.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                listFragment.shareImages();
-                listFragment.reloadData();
-                getSupportActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_HOME | ActionBar.DISPLAY_SHOW_TITLE);
+                Log.e(TAG,"permission check "+checkStoragePermission());
+                if(checkStoragePermission()){
+                    ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE,Manifest.permission.WRITE_EXTERNAL_STORAGE}, MY_PERMISSIONS_REQUEST_STORAGE);
+                }else {
+                    listFragment.shareImages();
+                    listFragment.reloadData();
+                    getSupportActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_HOME | ActionBar.DISPLAY_SHOW_TITLE);
+                }
             }
         });
 
@@ -171,6 +181,35 @@ public class MainActivity extends AppCompatActivity implements ListFragment.Inte
             }
         });
         builder.show();
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case MY_PERMISSIONS_REQUEST_STORAGE: {
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED && grantResults[1] == PackageManager.PERMISSION_GRANTED) {
+                    listFragment.shareImages();
+                    listFragment.reloadData();
+                    getSupportActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_HOME | ActionBar.DISPLAY_SHOW_TITLE);
+                } else {
+                    utils.Toast("Unable to share until you provide storage permission");
+                }
+                return;
+            }
+        }
+    }
+
+    void checkPermission(){
+        if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE,Manifest.permission.WRITE_EXTERNAL_STORAGE}, MY_PERMISSIONS_REQUEST_STORAGE);
+        }else{
+            Log.e(TAG,"permission available");
+        }
+    }
+
+    boolean checkStoragePermission(){
+        return ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED;
     }
 
 }
