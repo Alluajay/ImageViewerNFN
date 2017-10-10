@@ -36,6 +36,8 @@ import org.json.JSONObject;
 import java.io.OutputStream;
 import java.util.ArrayList;
 
+import static android.R.attr.bitmap;
+
 public class ListFragment extends Fragment {
     static String TAG = ListFragment.class.getSimpleName();
     static final String RequestUrl = "http://www.expns.nfndev.com/images_list?page=1";
@@ -90,8 +92,8 @@ public class ListFragment extends Fragment {
             }
 
             @Override
-            public void onSelection() {
-                interactionInterface.onSelection();
+            public void onSelection(int count) {
+                interactionInterface.onSelection(count);
             }
         };
         recyclerViewAdapter = new ImagesRecyclerViewAdapter(context,listItemClickInterface);
@@ -112,6 +114,17 @@ public class ListFragment extends Fragment {
             interactionInterface = (InteractionInterface)context;
         }else{
             throw new RuntimeException(new Throwable("Implement Interaction Interface"));
+        }
+        if(recyclerViewAdapter != null){
+            recyclerViewAdapter.removeSelection();
+        }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if(recyclerViewAdapter != null){
+            recyclerViewAdapter.removeSelection();
         }
     }
 
@@ -146,21 +159,12 @@ public class ListFragment extends Fragment {
         values.put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg");
 
         for(int i = 0; i < recyclerViewAdapter.getSelectedImages().size(); i++) {
-            Uri uri = context.getContentResolver().
-                    insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                            values);
-
-            OutputStream outstream;
-            try {
-                outstream = context.getContentResolver().openOutputStream(uri);
-                recyclerViewAdapter.getSelectedImages().get(i).getBitmapImage().compress(Bitmap.CompressFormat.JPEG, 100, outstream);
-                outstream.close();
-            } catch (Exception e) {
-                System.err.println(e.toString());
-            }
-
-            uris.add(uri);
+            Log.e(TAG,i+"");
+            String pathofBmp = MediaStore.Images.Media.insertImage(context.getContentResolver(), recyclerViewAdapter.getSelectedImages().get(i).getBitmapImage(),recyclerViewAdapter.getSelectedImages().get(i).getId()+"", null);
+            Uri bmpUri = Uri.parse(pathofBmp);
+            uris.add(bmpUri);
         }
+
         Intent shareIntent = new Intent();
         shareIntent.setAction(Intent.ACTION_SEND_MULTIPLE);
         shareIntent.putParcelableArrayListExtra(Intent.EXTRA_STREAM, uris);
@@ -170,10 +174,14 @@ public class ListFragment extends Fragment {
 
     void fetchDataFromServer(){
         if(!utils.isNetworkAvailable()){
-            utils.Toast("Network connection not available. Please connect to the network to download data.");
+            stopSwipe();
+            utils.Toast(getString(R.string.networkNotAvailable));
+            displayText(getString(R.string.networkNotAvailable));
             return;
         }
         imagesClassArrayList = new ArrayList<>();
+        recyclerViewAdapter.removeSelection();
+        clearText();
         JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, RequestUrl, null, new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
@@ -182,6 +190,10 @@ public class ListFragment extends Fragment {
                 recyclerViewAdapter.clearList();
                 try {
                     JSONArray imageArray = response.getJSONArray("images");
+                    if(imageArray.length() == 0){
+                        displayText(getString(R.string.noImagesFound));
+                        return;
+                    }
                     for(int i = 0;i<imageArray.length();i++){
                         JSONObject object = imageArray.getJSONObject(i);
                         int id = object.getInt("id");
@@ -192,6 +204,7 @@ public class ListFragment extends Fragment {
                     }
                 } catch (JSONException e) {
                     e.printStackTrace();
+                    displayText(getString(R.string.unableToFetch));
                     utils.Toast("Error in fetching data "+e.toString());
                 }
 
@@ -200,6 +213,7 @@ public class ListFragment extends Fragment {
             @Override
             public void onErrorResponse(VolleyError error) {
                 stopSwipe();
+                displayText(getString(R.string.unableToFetch));
                 Log.e(TAG,error.toString());
             }
         });
@@ -207,14 +221,25 @@ public class ListFragment extends Fragment {
         requestQueue.add(request);
     }
 
+    public void displayText(String msg){
+        recyclerView.setVisibility(View.GONE);
+        txtNoImages.setVisibility(View.VISIBLE);
+        txtNoImages.setText(msg);
+    }
+
+    public void clearText(){
+        recyclerView.setVisibility(View.VISIBLE);
+        txtNoImages.setVisibility(View.GONE);
+    }
+
     public interface InteractionInterface{
         void onItemSelected(ImagesClass imagesClass);
-        void onSelection();
+        void onSelection(int count);
     }
 
     public interface ListItemClickInterface{
         void onItemClicked(ImagesClass imagesClass);
-        void onSelection();
+        void onSelection(int count);
     }
 
 }

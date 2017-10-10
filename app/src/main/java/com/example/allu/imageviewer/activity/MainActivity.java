@@ -8,6 +8,7 @@ import android.graphics.drawable.GradientDrawable;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -15,10 +16,12 @@ import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.OrientationEventListener;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.android.volley.Request;
@@ -49,13 +52,61 @@ public class MainActivity extends AppCompatActivity implements ListFragment.Inte
 
     Menu menu;
 
+    TextView selectionCount;
+    ImageView img_cancel;
+    ImageView img_share;
+    ImageView img_delete;
+
+    ActionBar actionBar;
+    View customActionBar;
+    boolean customActionBarAdded;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         setTitle(getString(R.string.photos));
         utils = new Utils(this);
+        actionBar = getSupportActionBar();
 
+        loadSelectionActionBar();
+
+    }
+
+    void loadSelectionActionBar(){
+        LayoutInflater mInflater = LayoutInflater.from(this);
+
+        customActionBar = mInflater.inflate(R.layout.selection_actionbar, null);
+        selectionCount = (TextView) customActionBar.findViewById(R.id.txt_selectionCount);
+        img_cancel = (ImageView) customActionBar.findViewById(R.id.img_cancel);
+        img_share = (ImageView) customActionBar.findViewById(R.id.img_share);
+        img_delete = (ImageView) customActionBar.findViewById(R.id.img_delete);
+
+        img_cancel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                listFragment.reloadData();
+                getSupportActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_HOME | ActionBar.DISPLAY_SHOW_TITLE);
+            }
+        });
+
+        img_share.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                listFragment.shareImages();
+                listFragment.reloadData();
+                getSupportActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_HOME | ActionBar.DISPLAY_SHOW_TITLE);
+            }
+        });
+
+        img_delete.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                utils.Toast("Under construction");
+            }
+        });
+
+        customActionBarAdded = false;
     }
 
     @Override
@@ -91,48 +142,11 @@ public class MainActivity extends AppCompatActivity implements ListFragment.Inte
     }
 
     @Override
-    public void onSelection() {
-        if(menu != null){
-            final MenuItem share = menu.add("Share");
-            share.setIcon(R.drawable.ic_share_black_24dp);
-            share.setShowAsActionFlags(MenuItem.SHOW_AS_ACTION_IF_ROOM);
-            share.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
-                @Override
-                public boolean onMenuItemClick(MenuItem menuItem) {
-                    if(listFragment != null){
-                        listFragment.shareImages();
-                    }
-                    return false;
-                }
-            });
-            final MenuItem delete = menu.add("Delete");
-            delete.setIcon(R.drawable.ic_delete_black_24dp);
-            delete.setShowAsActionFlags(MenuItem.SHOW_AS_ACTION_IF_ROOM);
-            delete.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
-                @Override
-                public boolean onMenuItemClick(MenuItem menuItem) {
-                    return false;
-                }
-            });
-
-            MenuItem mi = menu.add("Cancel");
-            mi.setIcon(R.drawable.ic_cancel_black_24dp);
-            mi.setShowAsActionFlags(MenuItem.SHOW_AS_ACTION_IF_ROOM);
-            mi.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
-                @Override
-                public boolean onMenuItemClick(MenuItem menuItem) {
-                    Log.e(TAG,"clicked");
-                    if(listFragment != null){
-                        Log.e(TAG,"clicked");
-                        listFragment.reloadData();
-                        menu.removeItem(menuItem.getItemId());
-                        menu.removeItem(share.getItemId());
-                        menu.removeItem(delete.getItemId());
-                    }
-                    return false;
-                }
-            });
-            Log.e(TAG,"selection menu");
+    public void onSelection(int count) {
+        selectionCount.setText(count +" Selected");
+        if(!customActionBarAdded){
+            actionBar.setCustomView(customActionBar);
+            actionBar.setDisplayShowCustomEnabled(true);
         }
     }
 

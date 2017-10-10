@@ -2,6 +2,7 @@ package com.example.allu.imageviewer.recyclerViewAdapter;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -59,7 +60,7 @@ public class ImagesRecyclerViewAdapter extends RecyclerView.Adapter<ImagesListHo
         Log.e(TAG,"added "+position);
         final ImagesClass imagesClass = imagesClassArrayList.get(position);
         holder.progressBar.setVisibility(View.VISIBLE);
-        Picasso.with(context).load(imagesClass.getUrl()).placeholder(R.mipmap.ic_launcher_round).into(holder.imageView, new Callback() {
+        Picasso.with(context).load(imagesClass.getUrl()).placeholder(R.drawable.ic_image_black_48dp).into(holder.imageView, new Callback() {
             @Override
             public void onSuccess() {
                 holder.progressBar.setVisibility(View.GONE);
@@ -84,21 +85,13 @@ public class ImagesRecyclerViewAdapter extends RecyclerView.Adapter<ImagesListHo
                     }
                 }else{
                     if(!imagesClassArrayList.get(position).isSelection()){
-                        holder.checkBoxSelection.setVisibility(View.VISIBLE);
-                        RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT);
-                        lp.setMargins(selectionMargin,selectionMargin,selectionMargin,selectionMargin);
-                        holder.imageView.setLayoutParams(lp);
+                        holder.imageView.buildDrawingCache();
+                        imagesClassArrayList.get(position).setBitmapImage(holder.imageView.getDrawingCache(true).copy(Bitmap.Config.RGB_565, false));
+                        selectImage(imagesClassArrayList.get(position),position,true);
                         holder.checkBoxSelection.setChecked(true);
-                        imagesClassArrayList.get(position).setSelection(true);
-                        imagesClass.setBitmapImage(holder.imageView.getDrawingCache());
-                        selectedImages.add(imagesClass);
                     }else {
-                        holder.checkBoxSelection.setVisibility(View.VISIBLE);
-                        RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT);
-                        holder.imageView.setLayoutParams(lp);
+                        selectImage(imagesClassArrayList.get(position),position,false);
                         holder.checkBoxSelection.setChecked(false);
-                        imagesClassArrayList.get(position).setSelection(false);
-                        removeSelectedImage(imagesClassArrayList.get(position).getId());
                     }
 
                 }
@@ -108,18 +101,13 @@ public class ImagesRecyclerViewAdapter extends RecyclerView.Adapter<ImagesListHo
         holder.imageView.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View view) {
-                if(holder.checkBoxSelection.getVisibility() == View.INVISIBLE){
-                    holder.checkBoxSelection.setVisibility(View.VISIBLE);
-                    RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT);
-                    lp.setMargins(selectionMargin,selectionMargin,selectionMargin,selectionMargin);
-                    holder.imageView.setLayoutParams(lp);
-                    holder.checkBoxSelection.setChecked(true);
-                    imagesClassArrayList.get(position).setSelection(true);
-                    listItemClickInterface.onSelection();
-                    imagesClass.setBitmapImage(holder.imageView.getDrawingCache());
-                    selectedImages.add(imagesClass);
-                    selection = true;
+                holder.imageView.buildDrawingCache();
+                holder.imageView.getDrawingCache().recycle();
+                imagesClassArrayList.get(position).setBitmapImage(holder.imageView.getDrawingCache(true).copy(Bitmap.Config.RGB_565, false));
+                if(imagesClassArrayList.get(position).getBitmapImage() == null){
+                    Log.e(TAG,"null exception");
                 }
+                selectImage(imagesClassArrayList.get(position),position,true);
                 return true;
             }
         });
@@ -129,8 +117,34 @@ public class ImagesRecyclerViewAdapter extends RecyclerView.Adapter<ImagesListHo
             imagesClassArrayList.get(position).setSelection(false);
             RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT);
             holder.imageView.setLayoutParams(lp);
+        }else{
+            holder.checkBoxSelection.setVisibility(View.VISIBLE);
+            RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT);
+            lp.setMargins(selectionMargin,selectionMargin,selectionMargin,selectionMargin);
+            holder.imageView.setLayoutParams(lp);
+            holder.checkBoxSelection.setChecked(false);
         }
+        holder.checkBoxSelection.setChecked(imagesClassArrayList.get(position).isSelection());
+    }
 
+    void selectImage(ImagesClass imagesClass,int pos,boolean flag){
+        Log.e(TAG,"selection position "+pos+" "+flag+" "+selection);
+        if(!selection && flag){
+            selection = true;
+            imagesClassArrayList.get(pos).setSelection(true);
+            selectedImages.add(imagesClass);
+            this.notifyDataSetChanged();
+            listItemClickInterface.onSelection(selectedImages.size());
+            return;
+        }else if(flag){
+            imagesClassArrayList.get(pos).setSelection(true);
+            selectedImages.add(imagesClass);
+        }else{
+            selectedImages.remove(imagesClassArrayList.get(pos));
+            imagesClassArrayList.get(pos).setSelection(false);
+        }
+        listItemClickInterface.onSelection(selectedImages.size());
+        this.notifyItemChanged(pos);
     }
 
     @Override
@@ -153,6 +167,7 @@ public class ImagesRecyclerViewAdapter extends RecyclerView.Adapter<ImagesListHo
 
     public void removeSelection(){
         selection = false;
+        selectedImages = new ArrayList<>();
         notifyDataSetChanged();
         notifyItemRangeChanged(0,imagesClassArrayList.size()-1);
     }
@@ -179,6 +194,7 @@ class ImagesListHolder extends RecyclerView.ViewHolder{
     public ImagesListHolder(View itemView) {
         super(itemView);
         imageView = (ImageView)itemView.findViewById(R.id.image);
+        imageView.setDrawingCacheEnabled(true);
         progressBar = (ProgressBar)itemView.findViewById(R.id.progreeBar);
         checkBoxSelection = (CheckBox)itemView.findViewById(R.id.checkbox_selection);
     }
