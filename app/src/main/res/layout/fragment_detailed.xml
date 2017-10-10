@@ -27,7 +27,7 @@
             <LinearLayout
                 android:id="@+id/layout"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="40dp"
                 android:padding="@dimen/default_padding"
                 android:background="@color/transparent1"
                 android:orientation="horizontal"
@@ -37,6 +37,7 @@
                 <ImageButton
                     android:id="@+id/imgBtn_delete"
                     android:layout_width="0dp"
+                    android:clickable="true"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:background="@color/transparent"
@@ -45,6 +46,7 @@
                 <ImageButton
                     android:id="@+id/imgBtn_download"
                     android:layout_width="0dp"
+                    android:clickable="true"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:background="@color/transparent"

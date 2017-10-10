@@ -32,6 +32,17 @@ import static com.example.allu.imageviewer.activity.DetailedImageView.Intent_Ima
 
 public class ImagesRecyclerViewAdapter extends RecyclerView.Adapter<ImagesListHolder> {
     static String TAG = ImagesRecyclerViewAdapter.class.getSimpleName();
+
+    public ArrayList<ImagesClass> getImagesClassArrayList() {
+        return imagesClassArrayList;
+    }
+
+    public void setImagesClassArrayList(ArrayList<ImagesClass> imagesClassArrayList) {
+        this.imagesClassArrayList = imagesClassArrayList;
+        this.notifyItemInserted(imagesClassArrayList.size());
+        this.notifyDataSetChanged();
+    }
+
     ArrayList<ImagesClass> imagesClassArrayList;
     ArrayList<ImagesClass> selectedImages;
     Context context;
@@ -57,10 +68,9 @@ public class ImagesRecyclerViewAdapter extends RecyclerView.Adapter<ImagesListHo
 
     @Override
     public void onBindViewHolder(final ImagesListHolder holder, final int position) {
-        Log.e(TAG,"added "+position);
         final ImagesClass imagesClass = imagesClassArrayList.get(position);
         holder.progressBar.setVisibility(View.VISIBLE);
-        Picasso.with(context).load(imagesClass.getUrl()).placeholder(R.drawable.ic_image_black_48dp).into(holder.imageView, new Callback() {
+        Picasso.with(context).load(imagesClass.getUrl()).placeholder(R.drawable.image_placeholder).into(holder.imageView, new Callback() {
             @Override
             public void onSuccess() {
                 holder.progressBar.setVisibility(View.GONE);
@@ -81,7 +91,7 @@ public class ImagesRecyclerViewAdapter extends RecyclerView.Adapter<ImagesListHo
                     if(imagesClass.isLoaded()){
                         listItemClickInterface.onItemClicked(imagesClass);
                     }else{
-                        utils.Toast("The images is not loaded");
+                        utils.Toast(context.getString(R.string.imageNotLoaded));
                     }
                 }else{
                     if(!imagesClassArrayList.get(position).isSelection()){
@@ -128,7 +138,6 @@ public class ImagesRecyclerViewAdapter extends RecyclerView.Adapter<ImagesListHo
     }
 
     void selectImage(ImagesClass imagesClass,int pos,boolean flag){
-        Log.e(TAG,"selection position "+pos+" "+flag+" "+selection);
         if(!selection && flag){
             selection = true;
             imagesClassArrayList.get(pos).setSelection(true);
@@ -153,7 +162,6 @@ public class ImagesRecyclerViewAdapter extends RecyclerView.Adapter<ImagesListHo
     }
 
     public void addCustomer(ImagesClass imagesClass){
-        Log.e(TAG,"image added "+imagesClass.getUrl());
         this.imagesClassArrayList.add(imagesClass);
         this.notifyItemInserted(imagesClassArrayList.size());
         this.notifyDataSetChanged();
@@ -174,15 +182,6 @@ public class ImagesRecyclerViewAdapter extends RecyclerView.Adapter<ImagesListHo
 
     public ArrayList<ImagesClass> getSelectedImages(){
         return this.selectedImages;
-    }
-
-    public void removeSelectedImage(int id){
-        for(int i = 0;i<selectedImages.size();i++){
-            if(selectedImages.get(i).getId() == id){
-                selectedImages.remove(selectedImages.get(i));
-                return;
-            }
-        }
     }
 }
 

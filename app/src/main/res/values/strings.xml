@@ -3,10 +3,40 @@
     <string name="photos">Photos</string>
     <string name="DetailedView">Detailed View</string>
 
-    <string name="noImagesFound">No Images Found</string>
+    <string name="download">Download</string>
+    <string name="share">Share</string>
+    <string name="delete">Delete</string>
 
+    <string name="requestUrl">http://www.expns.nfndev.com/images_list?page=1</string>
+
+    <string name="noImagesFound">No Images Found</string>
+    <string name="imageNotLoaded">The images is not loaded</string>
     <string name="unableToFetch">Unable to fetch data</string>
     <string name="networkNotAvailable">Network connection not available. Please connect to the network.</string>
+
+    <string name="selected">Selected</string>
+    <string name="selectItems">Select the items</string>
+    <string name="unableToLoadImg">Unable to load the image</string>
+
+    <string name="emptyList">List is empty. please swipe to reload the data</string>
+    <string name="closeAppTitle">Close Application</string>
+    <string name="closeDesc">Do you really want to close the application?</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+
+    <string name="shareTo">Share images to..</string>
+
+    <string name="sharePermission">Unable to share until you provide storage permission</string>
+    <string name="downloadPermission">Unable to download until you provide storage permission</string>
+
+    <string name="implementActionInterface">Implement ActionInterface on the parent activity</string>
+    <string name="implementInteractionInterface">Implement Interaction on the parent activity</string>
+
+    <string name="fileDownloaded">File downloaded to </string>
+    <string name="errorAccessing">Error accessing file: </string>
+    <string name="fileNotFound">File not found: </string>
+
+    <string name="errorCreatingFile">Error creating media file, check storage permissions: </string>
 
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>

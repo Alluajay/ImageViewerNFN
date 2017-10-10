@@ -6,7 +6,9 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
+import android.graphics.Bitmap;
 import android.graphics.drawable.GradientDrawable;
+import android.os.Environment;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
@@ -45,15 +47,21 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 
 import static com.example.allu.imageviewer.activity.DetailedImageView.Intent_Image;
 
-public class MainActivity extends AppCompatActivity implements ListFragment.InteractionInterface {
+public class MainActivity extends AppCompatActivity implements ListFragment.InteractionInterface,DetailedFragment.ActionInterface {
     static String TAG = MainActivity.class.getSimpleName();
     Utils utils;
     ListFragment listFragment;
-    final int MY_PERMISSIONS_REQUEST_STORAGE = 60;
+    public static final int MY_PERMISSIONS_REQUEST_STORAGE_FOR_SHARE = 60,MY_PERMISSIONS_REQUEST_STORAGE_FOR_DOWNLOAD = 61;
 
     Menu menu;
 
@@ -65,6 +73,8 @@ public class MainActivity extends AppCompatActivity implements ListFragment.Inte
     ActionBar actionBar;
     View customActionBar;
     boolean customActionBarAdded;
+    Bitmap downloadBitmap;
+    String imgTitle;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -100,11 +110,9 @@ public class MainActivity extends AppCompatActivity implements ListFragment.Inte
             public void onClick(View view) {
                 Log.e(TAG,"permission check "+checkStoragePermission());
                 if(checkStoragePermission()){
-                    ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE,Manifest.permission.WRITE_EXTERNAL_STORAGE}, MY_PERMISSIONS_REQUEST_STORAGE);
+                    ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE,Manifest.permission.WRITE_EXTERNAL_STORAGE}, MY_PERMISSIONS_REQUEST_STORAGE_FOR_SHARE);
                 }else {
                     listFragment.shareImages();
-                    listFragment.reloadData();
-                    getSupportActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_HOME | ActionBar.DISPLAY_SHOW_TITLE);
                 }
             }
         });
@@ -112,7 +120,7 @@ public class MainActivity extends AppCompatActivity implements ListFragment.Inte
         img_delete.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                utils.Toast("Under construction");
+                listFragment.deleteImages();
             }
         });
 
@@ -120,8 +128,21 @@ public class MainActivity extends AppCompatActivity implements ListFragment.Inte
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        removeCustomActionBar();
+    }
+
+    public void removeCustomActionBar(){
+        getSupportActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_HOME | ActionBar.DISPLAY_SHOW_TITLE);
+    }
+
+    public void loadImageData(){
+        listFragment.reloadData();
+    }
+
+    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.main_menu, menu);
         this.menu = menu;
         listFragment = (ListFragment) getSupportFragmentManager().findFragmentById(R.id.listFragment);
@@ -131,10 +152,8 @@ public class MainActivity extends AppCompatActivity implements ListFragment.Inte
 
     @Override
     public void onItemSelected(ImagesClass imagesClass) {
-        Log.e(TAG,"item clicked ");
         int ori = getResources().getConfiguration().orientation;
         if(ori == Configuration.ORIENTATION_PORTRAIT){
-            Log.e(TAG,"intend");
             Intent i = new Intent(MainActivity.this,DetailedImageView.class);
             i.putExtra(Intent_Image,imagesClass);
             startActivity(i);
@@ -143,7 +162,6 @@ public class MainActivity extends AppCompatActivity implements ListFragment.Inte
             if(detailedFragment != null){
                 detailedFragment.setImageClass(imagesClass);
             }else{
-                Log.e(TAG,"intend");
                 Intent i = new Intent(MainActivity.this,DetailedImageView.class);
                 i.putExtra(Intent_Image,imagesClass);
                 startActivity(i);
@@ -153,7 +171,7 @@ public class MainActivity extends AppCompatActivity implements ListFragment.Inte
 
     @Override
     public void onSelection(int count) {
-        selectionCount.setText(count +" Selected");
+        selectionCount.setText(count +" "+getString(R.string.selected));
         if(!customActionBarAdded){
             actionBar.setCustomView(customActionBar);
             actionBar.setDisplayShowCustomEnabled(true);
@@ -163,9 +181,9 @@ public class MainActivity extends AppCompatActivity implements ListFragment.Inte
     @Override
     public void onBackPressed() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Close Application");
-        builder.setMessage("Do you really want to close the application?");
-        builder.setPositiveButton("YES", new DialogInterface.OnClickListener() {
+        builder.setTitle(getString(R.string.closeAppTitle));
+        builder.setMessage(getString(R.string.closeDesc));
+        builder.setPositiveButton(getString(R.string.yes), new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
                 Intent startMain = new Intent(Intent.ACTION_MAIN);
@@ -174,7 +192,7 @@ public class MainActivity extends AppCompatActivity implements ListFragment.Inte
                 startActivity(startMain);
             }
         });
-        builder.setNegativeButton("NO", new DialogInterface.OnClickListener() {
+        builder.setNegativeButton(getString(R.string.no), new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
                 dialogInterface.cancel();
@@ -187,24 +205,22 @@ public class MainActivity extends AppCompatActivity implements ListFragment.Inte
     public void onRequestPermissionsResult(int requestCode,
                                            String permissions[], int[] grantResults) {
         switch (requestCode) {
-            case MY_PERMISSIONS_REQUEST_STORAGE: {
+            case MY_PERMISSIONS_REQUEST_STORAGE_FOR_SHARE: {
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED && grantResults[1] == PackageManager.PERMISSION_GRANTED) {
                     listFragment.shareImages();
-                    listFragment.reloadData();
-                    getSupportActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_HOME | ActionBar.DISPLAY_SHOW_TITLE);
                 } else {
-                    utils.Toast("Unable to share until you provide storage permission");
+                    utils.Toast(getString(R.string.sharePermission));
                 }
                 return;
             }
-        }
-    }
-
-    void checkPermission(){
-        if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE,Manifest.permission.WRITE_EXTERNAL_STORAGE}, MY_PERMISSIONS_REQUEST_STORAGE);
-        }else{
-            Log.e(TAG,"permission available");
+            case MY_PERMISSIONS_REQUEST_STORAGE_FOR_DOWNLOAD:{
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED && grantResults[1] == PackageManager.PERMISSION_GRANTED) {
+                    utils.downloadImage(downloadBitmap,imgTitle);
+                } else {
+                    utils.Toast(getString(R.string.downloadPermission));
+                }
+                return;
+            }
         }
     }
 
@@ -212,4 +228,14 @@ public class MainActivity extends AppCompatActivity implements ListFragment.Inte
         return ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED;
     }
 
+    @Override
+    public void onDownload(Bitmap bitmap,String title) {
+        if(checkStoragePermission()){
+            ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE,Manifest.permission.WRITE_EXTERNAL_STORAGE}, MY_PERMISSIONS_REQUEST_STORAGE_FOR_DOWNLOAD);
+            downloadBitmap = bitmap;
+            imgTitle = title;
+        }else {
+            utils.downloadImage(bitmap,title);
+        }
+    }
 }

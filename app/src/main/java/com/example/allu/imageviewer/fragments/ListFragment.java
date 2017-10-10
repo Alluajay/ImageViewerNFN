@@ -2,6 +2,7 @@ package com.example.allu.imageviewer.fragments;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
@@ -9,6 +10,7 @@ import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -25,6 +27,7 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.example.allu.imageviewer.R;
+import com.example.allu.imageviewer.activity.MainActivity;
 import com.example.allu.imageviewer.pojo.ImagesClass;
 import com.example.allu.imageviewer.recyclerViewAdapter.ImagesRecyclerViewAdapter;
 import com.example.allu.imageviewer.utils.Utils;
@@ -40,7 +43,6 @@ import static android.R.attr.bitmap;
 
 public class ListFragment extends Fragment {
     static String TAG = ListFragment.class.getSimpleName();
-    static final String RequestUrl = "http://www.expns.nfndev.com/images_list?page=1";
 
     Utils utils;
     Context context;
@@ -54,6 +56,7 @@ public class ListFragment extends Fragment {
     ArrayList<ImagesClass> imagesClassArrayList;
 
     InteractionInterface interactionInterface;
+    static boolean attach = false;
 
     public ListFragment() {
         // Required empty public constructor
@@ -76,6 +79,8 @@ public class ListFragment extends Fragment {
         refreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
+                ((MainActivity)(context)).removeCustomActionBar();
+                recyclerViewAdapter.removeSelection();
                 fetchDataFromServer();
             }
         });
@@ -98,13 +103,22 @@ public class ListFragment extends Fragment {
         };
         recyclerViewAdapter = new ImagesRecyclerViewAdapter(context,listItemClickInterface);
         recyclerView.setAdapter(recyclerViewAdapter);
-        fetchDataFromServer();
+        if(utils.checkImageData()){
+            loadPrefData();
+        }else{
+            fetchDataFromServer();
+        }
         return view;
     }
 
-    // TODO: Rename method, update argument and hook method into UI event
-    public void onButtonPressed(Uri uri) {
-
+    void loadPrefData(){
+        stopSwipe();
+        ArrayList<ImagesClass> imagesClasses = utils.getImageData();
+        if(imagesClasses.size() == 0){
+            displayText(getString(R.string.emptyList));
+        }else{
+            recyclerViewAdapter.setImagesClassArrayList(utils.getImageData());
+        }
     }
 
     @Override
@@ -113,18 +127,38 @@ public class ListFragment extends Fragment {
         if(context instanceof InteractionInterface){
             interactionInterface = (InteractionInterface)context;
         }else{
-            throw new RuntimeException(new Throwable("Implement Interaction Interface"));
+            throw new RuntimeException(new Throwable(getString(R.string.implementInteractionInterface)));
         }
         if(recyclerViewAdapter != null){
             recyclerViewAdapter.removeSelection();
+            if(utils.checkImageData()){
+                loadPrefData();
+            }else{
+                fetchDataFromServer();
+            }
         }
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        if(recyclerViewAdapter != null){
+        if(recyclerViewAdapter != null && !attach){
+            attach = false;
             recyclerViewAdapter.removeSelection();
+            if(utils.checkImageData()){
+                loadPrefData();
+            }else{
+                fetchDataFromServer();
+            }
+        }else if(!attach){
+            attach = false;
+        }else {
+            recyclerViewAdapter.removeSelection();
+            if(utils.checkImageData()){
+                loadPrefData();
+            }else{
+                fetchDataFromServer();
+            }
         }
     }
 
@@ -148,10 +182,14 @@ public class ListFragment extends Fragment {
 
     public void reloadData(){
         recyclerViewAdapter.removeSelection();
+        loadPrefData();
     }
 
     public void shareImages(){
-        Log.e(TAG,recyclerViewAdapter.getSelectedImages().size()+"");
+        if(recyclerViewAdapter.getSelectedImages().size() <= 0){
+            utils.Toast(getString(R.string.selectItems));
+            return;
+        }
         ArrayList<Uri> uris = new ArrayList<>();
 
         ContentValues values = new ContentValues();
@@ -164,12 +202,69 @@ public class ListFragment extends Fragment {
             Uri bmpUri = Uri.parse(pathofBmp);
             uris.add(bmpUri);
         }
-
-        Intent shareIntent = new Intent();
+        final Intent shareIntent = new Intent();
         shareIntent.setAction(Intent.ACTION_SEND_MULTIPLE);
         shareIntent.putParcelableArrayListExtra(Intent.EXTRA_STREAM, uris);
         shareIntent.setType("image/*");
-        startActivity(Intent.createChooser(shareIntent, "Share images to.."));
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        builder.setTitle("Share "+recyclerViewAdapter.getSelectedImages().size()+" Image?");
+        builder.setPositiveButton(getString(R.string.yes), new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                dialogInterface.dismiss();
+                startActivityForResult(Intent.createChooser(shareIntent, getString(R.string.shareTo)),1000);
+            }
+        });
+        builder.setNegativeButton(getString(R.string.no), new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                dialogInterface.dismiss();
+            }
+        });
+        builder.show();
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode,resultCode,data);
+        Log.e(TAG,requestCode+" "+resultCode);
+        attach = true;
+    }
+
+
+
+    public void deleteImages(){
+        if(recyclerViewAdapter.getSelectedImages().size() <= 0){
+            utils.Toast(getString(R.string.selectItems));
+            return;
+        }
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        builder.setTitle("Delete "+recyclerViewAdapter.getSelectedImages().size()+" Image?");
+        builder.setPositiveButton(getString(R.string.yes), new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int j) {
+                dialogInterface.dismiss();
+                ArrayList<ImagesClass> selectedImages = recyclerViewAdapter.getSelectedImages();
+                for(int i = 0;i<selectedImages.size();i++){
+                    utils.removeImageData(selectedImages.get(i).getId());
+                }
+                reloadData();
+                recyclerViewAdapter.setImagesClassArrayList(utils.getImageData());
+                ((MainActivity)(context)).removeCustomActionBar();
+            }
+        });
+        builder.setNegativeButton(getString(R.string.no), new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+
+                dialogInterface.dismiss();
+            }
+        });
+        builder.show();
+
+
+
     }
 
     void fetchDataFromServer(){
@@ -182,7 +277,7 @@ public class ListFragment extends Fragment {
         imagesClassArrayList = new ArrayList<>();
         recyclerViewAdapter.removeSelection();
         clearText();
-        JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, RequestUrl, null, new Response.Listener<JSONObject>() {
+        JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, getString(R.string.requestUrl), null, new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
                 stopSwipe();
@@ -202,10 +297,12 @@ public class ListFragment extends Fragment {
                         imagesClassArrayList.add(imagesClass);
                         recyclerViewAdapter.addCustomer(imagesClass);
                     }
+                    utils.setImageData(recyclerViewAdapter.getImagesClassArrayList());
+                    Log.e(TAG,utils.getImageData().size()+"");
                 } catch (JSONException e) {
                     e.printStackTrace();
                     displayText(getString(R.string.unableToFetch));
-                    utils.Toast("Error in fetching data "+e.toString());
+                    utils.Toast(getString(R.string.unableToFetch)+" "+e.toString());
                 }
 
             }

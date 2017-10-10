@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical" android:layout_width="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
     android:layout_height="match_parent">
     <RelativeLayout
         android:layout_width="wrap_content"
@@ -14,6 +16,7 @@
             android:layout_centerVertical="true"
             android:layout_alignParentLeft="true"
             android:layout_marginLeft="@dimen/default_margin"
+            android:clickable="true"
             android:layout_marginRight="@dimen/default_margin"
             android:src="@drawable/ic_cancel_white_24dp" />
 
@@ -26,13 +29,13 @@
             android:textAppearance="?android:attr/textAppearanceLarge"
             android:textColor="#fff"
             android:layout_centerVertical="true"
-            android:layout_marginLeft="@dimen/default_margin"
+            android:layout_marginLeft="16dp"
             android:layout_toEndOf="@+id/img_cancel" />
 
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginRight="@dimen/default_margin"
+            android:layout_marginRight="12dp"
             android:layout_alignParentRight="true"
             android:layout_centerVertical="true">
             <ImageButton
@@ -41,12 +44,14 @@
                 android:layout_height="wrap_content"
                 android:layout_marginRight="16dp"
                 android:background="@null"
+                android:clickable="true"
                 android:src="@drawable/ic_share_white_24dp" />
             <ImageButton
                 android:id="@+id/img_delete"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:background="@null"
+                android:clickable="true"
                 android:src="@drawable/ic_delete_white_24dp" />
         </LinearLayout>
     </RelativeLayout>
