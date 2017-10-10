@@ -1,7 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:android="http://schemas.android.com/apk/res/android">
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
         android:id="@+id/menu_download"
         android:title="@string/download"
-        android:icon="@drawable/ic_file_download_black_24dp"/>
+        app:showAsAction="always"
+        android:icon="@drawable/ic_file_download_white_24dp"/>
+    <item
+        android:id="@+id/menu_share"
+        android:title="@string/share"
+        android:icon="@drawable/ic_share_white_24dp"
+        />
+    <item
+        android:id="@+id/menu_delete"
+        android:title="@string/delete"
+        android:icon="@drawable/ic_delete_white_24dp"
+        />
 </menu>

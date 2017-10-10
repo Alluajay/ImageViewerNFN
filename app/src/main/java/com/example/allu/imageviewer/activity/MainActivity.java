@@ -61,7 +61,7 @@ public class MainActivity extends AppCompatActivity implements ListFragment.Inte
     static String TAG = MainActivity.class.getSimpleName();
     Utils utils;
     ListFragment listFragment;
-    public static final int MY_PERMISSIONS_REQUEST_STORAGE_FOR_SHARE = 60,MY_PERMISSIONS_REQUEST_STORAGE_FOR_DOWNLOAD = 61;
+    public static final int MY_PERMISSIONS_REQUEST_STORAGE_FOR_SHARE = 60,MY_PERMISSIONS_REQUEST_STORAGE_FOR_SHARE_DETAILED = 61,MY_PERMISSIONS_REQUEST_STORAGE_FOR_DOWNLOAD = 62;
 
     Menu menu;
 
@@ -221,6 +221,20 @@ public class MainActivity extends AppCompatActivity implements ListFragment.Inte
                 }
                 return;
             }
+            case MY_PERMISSIONS_REQUEST_STORAGE_FOR_SHARE_DETAILED: {
+                DetailedFragment detailedFragment = (DetailedFragment)getSupportFragmentManager().findFragmentById(R.id.detailedFragment);
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED && grantResults[1] == PackageManager.PERMISSION_GRANTED) {
+                    if(detailedFragment != null){
+                        detailedFragment.shareImage();
+                    }else {
+                        utils.Toast(getString(R.string.unableToShare));
+                    }
+
+                } else {
+                    utils.Toast(getString(R.string.sharePermission));
+                }
+                return;
+            }
         }
     }
 
@@ -236,6 +250,16 @@ public class MainActivity extends AppCompatActivity implements ListFragment.Inte
             imgTitle = title;
         }else {
             utils.downloadImage(bitmap,title);
+        }
+    }
+
+    @Override
+    public void onShare() {
+        if(checkStoragePermission()){
+            ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE,Manifest.permission.WRITE_EXTERNAL_STORAGE}, MY_PERMISSIONS_REQUEST_STORAGE_FOR_SHARE_DETAILED);
+        }else {
+            DetailedFragment detailedFragment = (DetailedFragment)getSupportFragmentManager().findFragmentById(R.id.detailedFragment);
+            detailedFragment.shareImage();
         }
     }
 }

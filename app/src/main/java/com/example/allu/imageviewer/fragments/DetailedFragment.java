@@ -1,18 +1,22 @@
 package com.example.allu.imageviewer.fragments;
 
 import android.Manifest;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.provider.MediaStore;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -29,6 +33,7 @@ import com.squareup.picasso.Picasso;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 
 public class DetailedFragment extends Fragment {
@@ -37,7 +42,7 @@ public class DetailedFragment extends Fragment {
     Context context;
 
     ImageView imageView;
-    ImageButton imgBtnDownload,imgBtnDelete;
+    ImageButton imgBtnShare,imgBtnDelete;
 
     ImagesClass imagesClass;
     ActionInterface actionInterface;
@@ -60,7 +65,7 @@ public class DetailedFragment extends Fragment {
         imageView = (ImageView)view.findViewById(R.id.image);
         imageView.setImageResource(R.drawable.image_placeholder);
         imageView.setDrawingCacheEnabled(true);
-        imgBtnDownload = (ImageButton)view.findViewById(R.id.imgBtn_download);
+        imgBtnShare = (ImageButton)view.findViewById(R.id.imgBtn_share);
         imgBtnDelete = (ImageButton)view.findViewById(R.id.imgBtn_delete);
         imgBtnDelete.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -71,7 +76,42 @@ public class DetailedFragment extends Fragment {
         return view;
     }
 
-    void deleteImage(){
+
+    public void shareImage(){
+        ArrayList<Uri> uris = new ArrayList<>();
+
+        ContentValues values = new ContentValues();
+        values.put(MediaStore.Images.Media.TITLE, "title");
+        values.put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg");
+        imageView.getDrawingCache().recycle();
+        String pathofBmp = MediaStore.Images.Media.insertImage(context.getContentResolver(), imageView.getDrawingCache(true).copy(Bitmap.Config.RGB_565, false),imagesClass.getId()+"", null);
+        Uri bmpUri = Uri.parse(pathofBmp);
+        uris.add(bmpUri);
+
+        final Intent shareIntent = new Intent();
+        shareIntent.setAction(Intent.ACTION_SEND_MULTIPLE);
+        shareIntent.putParcelableArrayListExtra(Intent.EXTRA_STREAM, uris);
+        shareIntent.setType("image/*");
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        builder.setTitle("Share Image?");
+        builder.setPositiveButton(getString(R.string.yes), new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                dialogInterface.dismiss();
+                startActivityForResult(Intent.createChooser(shareIntent, getString(R.string.shareTo)),1000);
+            }
+        });
+        builder.setNegativeButton(getString(R.string.no), new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                dialogInterface.dismiss();
+            }
+        });
+        builder.show();
+    }
+
+    public void deleteImage(){
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
         builder.setTitle("Delete this image?");
         builder.setPositiveButton(getString(R.string.yes), new DialogInterface.OnClickListener() {
@@ -95,8 +135,27 @@ public class DetailedFragment extends Fragment {
             }
         });
         builder.show();
+    }
 
-
+    public void downloadImage(){
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        builder.setTitle("Download this image?");
+        builder.setPositiveButton(getString(R.string.yes), new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                dialogInterface.dismiss();
+                imageView.buildDrawingCache();
+                imageView.getDrawingCache().recycle();
+                actionInterface.onDownload(imageView.getDrawingCache(true).copy(Bitmap.Config.RGB_565, false),imagesClass.getId()+"");
+            }
+        });
+        builder.setNegativeButton(getString(R.string.no), new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                dialogInterface.dismiss();
+            }
+        });
+        builder.show();
     }
 
 
@@ -106,27 +165,10 @@ public class DetailedFragment extends Fragment {
             Picasso.with(context).load(imagesClass.getUrl()).placeholder(R.drawable.image_placeholder).into(imageView, new Callback() {
                 @Override
                 public void onSuccess() {
-                    imgBtnDownload.setOnClickListener(new View.OnClickListener() {
+                    imgBtnShare.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View view) {
-                            AlertDialog.Builder builder = new AlertDialog.Builder(context);
-                            builder.setTitle("Download this image?");
-                            builder.setPositiveButton(getString(R.string.yes), new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialogInterface, int i) {
-                                    dialogInterface.dismiss();
-                                    imageView.buildDrawingCache();
-                                    imageView.getDrawingCache().recycle();
-                                    actionInterface.onDownload(imageView.getDrawingCache(true).copy(Bitmap.Config.RGB_565, false),imagesClass.getId()+"");
-                                }
-                            });
-                            builder.setNegativeButton(getString(R.string.no), new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialogInterface, int i) {
-                                    dialogInterface.dismiss();
-                                }
-                            });
-                            builder.show();
+                            actionInterface.onShare();
                         }
                     });
                 }
@@ -156,5 +198,6 @@ public class DetailedFragment extends Fragment {
 
     public interface ActionInterface{
         void onDownload(Bitmap bitmap,String title);
+        void onShare();
     }
 }

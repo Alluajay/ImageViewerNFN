@@ -7,6 +7,8 @@
     <string name="share">Share</string>
     <string name="delete">Delete</string>
 
+    <string name="unableToShare">Unable to share image</string>
+
     <string name="requestUrl">http://www.expns.nfndev.com/images_list?page=1</string>
 
     <string name="noImagesFound">No Images Found</string>
