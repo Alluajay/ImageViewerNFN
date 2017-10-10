@@ -66,6 +66,16 @@ public class DetailedFragment extends Fragment {
         imageView.setImageResource(R.drawable.image_placeholder);
         imageView.setDrawingCacheEnabled(true);
         imgBtnShare = (ImageButton)view.findViewById(R.id.imgBtn_share);
+        imgBtnShare.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if(imagesClass == null){
+                    utils.Toast(getString(R.string.selectImage));
+                    Log.e(TAG,"null image class");
+                    return;
+                }
+            }
+        });
         imgBtnDelete = (ImageButton)view.findViewById(R.id.imgBtn_delete);
         imgBtnDelete.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -78,6 +88,11 @@ public class DetailedFragment extends Fragment {
 
 
     public void shareImage(){
+        if(imagesClass == null){
+            utils.Toast(getString(R.string.selectImage));
+            Log.e(TAG,"null image class");
+            return;
+        }
         ArrayList<Uri> uris = new ArrayList<>();
 
         ContentValues values = new ContentValues();
@@ -112,6 +127,11 @@ public class DetailedFragment extends Fragment {
     }
 
     public void deleteImage(){
+        if(imagesClass == null){
+            utils.Toast(getString(R.string.selectImage));
+            Log.e(TAG,"null image class");
+            return;
+        }
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
         builder.setTitle("Delete this image?");
         builder.setPositiveButton(getString(R.string.yes), new DialogInterface.OnClickListener() {
@@ -138,6 +158,11 @@ public class DetailedFragment extends Fragment {
     }
 
     public void downloadImage(){
+        if(imagesClass == null){
+            utils.Toast(getString(R.string.selectImage));
+            Log.e(TAG,"null image class");
+            return;
+        }
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
         builder.setTitle("Download this image?");
         builder.setPositiveButton(getString(R.string.yes), new DialogInterface.OnClickListener() {
@@ -168,6 +193,11 @@ public class DetailedFragment extends Fragment {
                     imgBtnShare.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View view) {
+                            if(imagesClass == null){
+                                utils.Toast(getString(R.string.selectImage));
+                                Log.e(TAG,"null image class");
+                                return;
+                            }
                             actionInterface.onShare();
                         }
                     });

@@ -18,6 +18,7 @@
 
     <string name="selected">Selected</string>
     <string name="selectItems">Select the items</string>
+    <string name="selectImage">Select Image</string>
     <string name="unableToLoadImg">Unable to load the image</string>
 
     <string name="emptyList">List is empty. please swipe to reload the data</string>
