@@ -180,6 +180,10 @@ public class ListFragment extends Fragment {
         }
     }
 
+    public boolean isSelected(){
+        return recyclerViewAdapter.getSelectedImages().size()>0;
+    }
+
     public void reloadData(){
         recyclerViewAdapter.removeSelection();
         loadPrefData();

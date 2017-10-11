@@ -211,6 +211,13 @@ public class DetailedFragment extends Fragment {
         }
     }
 
+    public void removeImageClass(){
+        imagesClass = null;
+        if(imageView != null){
+            imageView.setImageResource(R.drawable.image_placeholder);
+        }
+    }
+
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);

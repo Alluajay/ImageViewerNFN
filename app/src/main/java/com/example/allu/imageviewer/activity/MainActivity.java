@@ -85,7 +85,6 @@ public class MainActivity extends AppCompatActivity implements ListFragment.Inte
         actionBar = getSupportActionBar();
 
         loadSelectionActionBar();
-
     }
 
     void loadSelectionActionBar(){
@@ -121,6 +120,10 @@ public class MainActivity extends AppCompatActivity implements ListFragment.Inte
             @Override
             public void onClick(View view) {
                 listFragment.deleteImages();
+                DetailedFragment detailedFragment = (DetailedFragment)getSupportFragmentManager().findFragmentById(R.id.detailedFragment);
+                if(detailedFragment!=null){
+                    detailedFragment.removeImageClass();
+                }
             }
         });
 
@@ -180,25 +183,30 @@ public class MainActivity extends AppCompatActivity implements ListFragment.Inte
 
     @Override
     public void onBackPressed() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle(getString(R.string.closeAppTitle));
-        builder.setMessage(getString(R.string.closeDesc));
-        builder.setPositiveButton(getString(R.string.yes), new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                Intent startMain = new Intent(Intent.ACTION_MAIN);
-                startMain.addCategory(Intent.CATEGORY_HOME);
-                startMain.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                startActivity(startMain);
-            }
-        });
-        builder.setNegativeButton(getString(R.string.no), new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                dialogInterface.cancel();
-            }
-        });
-        builder.show();
+        if(listFragment.isSelected()){
+            listFragment.reloadData();
+            removeCustomActionBar();
+        }else{
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle(getString(R.string.closeAppTitle));
+            builder.setMessage(getString(R.string.closeDesc));
+            builder.setPositiveButton(getString(R.string.yes), new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+                    Intent startMain = new Intent(Intent.ACTION_MAIN);
+                    startMain.addCategory(Intent.CATEGORY_HOME);
+                    startMain.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(startMain);
+                }
+            });
+            builder.setNegativeButton(getString(R.string.no), new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+                    dialogInterface.cancel();
+                }
+            });
+            builder.show();
+        }
     }
 
     @Override
