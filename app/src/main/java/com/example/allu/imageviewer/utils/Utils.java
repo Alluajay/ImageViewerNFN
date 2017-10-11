@@ -145,6 +145,4 @@ public class Utils {
     public void Toast(String Msg){
         Toast.makeText(context,Msg,Toast.LENGTH_SHORT).show();
     }
-
-
 }
