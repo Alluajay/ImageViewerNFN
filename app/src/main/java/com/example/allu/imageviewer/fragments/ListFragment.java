@@ -201,7 +201,6 @@ public class ListFragment extends Fragment {
         values.put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg");
 
         for(int i = 0; i < recyclerViewAdapter.getSelectedImages().size(); i++) {
-            Log.e(TAG,i+"");
             String pathofBmp = MediaStore.Images.Media.insertImage(context.getContentResolver(), recyclerViewAdapter.getSelectedImages().get(i).getBitmapImage(),recyclerViewAdapter.getSelectedImages().get(i).getId()+"", null);
             Uri bmpUri = Uri.parse(pathofBmp);
             uris.add(bmpUri);
@@ -232,7 +231,6 @@ public class ListFragment extends Fragment {
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode,resultCode,data);
-        Log.e(TAG,requestCode+" "+resultCode);
         attach = true;
     }
 

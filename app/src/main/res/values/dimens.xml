@@ -9,4 +9,14 @@
     <dimen name="text5_size">10dp</dimen>
 
     <dimen name="selectedMargin">8dp</dimen>
+
+    <dimen name="splashScreen_dimen">200dp</dimen>
+    <dimen name="splashScreen_margin">24dp</dimen>
+    <dimen name="splashScreen_text">36dp</dimen>
+    
+    <dimen name="detail_footer_height">40dp</dimen>
+
+
+    <dimen name="custom_action_text_margin">12dp</dimen>
+    <dimen name="custom_action_icon_margin">16dp</dimen>
 </resources>

@@ -17,9 +17,9 @@
             android:layout_height="wrap_content"
             app:cardUseCompatPadding="true">
             <ImageView
-                android:layout_margin="24dp"
-                android:layout_width="200dp"
-                android:layout_height="200dp"
+                android:layout_margin="@dimen/splashScreen_margin"
+                android:layout_width="@dimen/splashScreen_dimen"
+                android:layout_height="@dimen/splashScreen_dimen"
                 android:src="@mipmap/ic_launcher"/>
         </android.support.v7.widget.CardView>
         <TextView
@@ -27,7 +27,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/app_name"
-            android:textSize="36dp"
+            android:textSize="@dimen/splashScreen_text"
             android:textAlignment="center"/>
     </LinearLayout>
 
