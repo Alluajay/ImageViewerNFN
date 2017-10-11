@@ -42,7 +42,7 @@ public class DetailedFragment extends Fragment {
     Context context;
 
     ImageView imageView;
-    ImageButton imgBtnShare,imgBtnDelete;
+    ImageButton imgBtnShare,imgBtnDelete,imgBtnDownload;
 
     ImagesClass imagesClass;
     ActionInterface actionInterface;
@@ -81,6 +81,14 @@ public class DetailedFragment extends Fragment {
             @Override
             public void onClick(View view) {
                 deleteImage();
+            }
+        });
+
+        imgBtnDownload = (ImageButton)view.findViewById(R.id.imgBtn_download);
+        imgBtnDownload.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                downloadImage();
             }
         });
         return view;

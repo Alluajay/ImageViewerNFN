@@ -31,7 +31,6 @@
                     android:id="@+id/recy_list"></android.support.v7.widget.RecyclerView>
             </LinearLayout>
         </android.support.v4.widget.SwipeRefreshLayout>
-
     </RelativeLayout>
 
 </FrameLayout>
